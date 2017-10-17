@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct 13 18:35:05 2017
+
+@author: laukaki
+"""
+
+import numpy as np
+import itertools
+from pylab import imshow, plot,show, ylim, xlabel, ylabel, subplots, legend
+import random
+
+def NumberofStock(T, C, Porfoliolist, StockH, StockL, GreedFactor):
+    NumberofStockH = []
+    NumberofStockL = []
+    for i in range(0,50):
+        if GreedFactor[T][i] == 0:
+            Portfolio = Porfoliolist[0]
+        else: 
+            Portfolio = Porfoliolist[1]
+        NumberofStockH.append(C[T][i]*Portfolio[0]/StockH[T])
+        NumberofStockL.append(C[T][i]*Portfolio[1]/StockL[T])
+    return NumberofStockH, NumberofStockL
+    
+def getCapital(t, C, Porfoliolist, StockH, StockL, GreedFactor):
+    Captialatt = []
+#    print(GreedFactor)
+#    print(C[t-1])
+#    print(StockH[t])
+    for i in range(0,50):
+        CH = StockH[t] * NumberofStock(t-1, C, Porfoliolist, StockH, StockL, GreedFactor)[0][i]
+        CL = StockL[t] * NumberofStock(t-1, C, Porfoliolist, StockH, StockL, GreedFactor)[1][i]
+        Captialatt.append(CH + CL)
+#    print(CH)
+    return Captialatt
+    
+def Memory(t, i, GreedFactor, Winhowmuch, Connect):
+    
+    L = list(zip(Winhowmuch[t], GreedFactor[t-1]))
+#    print(L)
+#    print(len(L))
+#    print(Winhowmuch[t])
+#    print(GreedFactor[t-1])
+    MemoryList = [L[x % len(L)] for x in range(i-Connect, i+Connect+1)]
+#    print(MemoryList)
+    return MemoryList
+    
+def FW(i, memory):
+    Winner = max(memory)
+    Next = Winner[1]
+    return Next
+
+def AL(i, memory):
+    Loser = min(memory)
+    if memory[1] == Loser:
+        if memory[1][1] == 0:
+            Next = 1
+        if memory[1][1] == 1:
+            Next = 0
+    else:
+        Next = memory[1][1]
+    return Next
+
+def StockH(T):
+#    C1 = np.random.random()
+    C1 = 0.6713081033987339
+    print("C1 is:")
+    print(C1)
+#    C2 = np.random.random()
+    C2 = 0.3863530740707609
+    print("C2 is:")
+    print(C2)
+#    wlist = linspace(5, 10, 100)
+#    w = np.random.choice(wlist)
+    w = 6.81818181818
+    print("w is:")
+    print(w)
+    StockH = [2 + C1*np.sin(w*t/15) + C2*np.cos(w*t/15) for t in T]
+#    StockH = [1 + t for t in T]
+    return StockH
+
+def TotalC(Clist):
+    TotalC = []
+    for x in Clist:
+        Total = sum(x)
+        TotalC.append(Total)
+    return TotalC
+
+"""
+The simulation of a group of payer play by FW/AL.
+Strategy size: [[Size of 50]*(number of index of T)]
+"""
+def groupSimulation(T, Stock, StockL, Strategy, Porfoliolist, Connect):
+    C = [[100.0]*50]
+    GreedFactor = [[0, 1]*25]
+    Winhowmuch = []
+    Winhowmuch.append([0]*50)
+    
+    for t in T[1:]:
+        C.append(getCapital(t, C, Porfoliolist, Stock, StockL, GreedFactor))
+        The_value_win = [C[t][i]-C[t-1][i] for i in range(len(C[t-1]))]
+        Winhowmuch.append(The_value_win) 
+        
+        GreedFactor.append([])
+        for i in range(0,50):
+            memory = Memory(t, i, GreedFactor, Winhowmuch, Connect)
+            if Strategy[t][i]=="FW":
+                Next = FW(i, memory)
+            if Strategy[t][i]=="AL":
+                Next = AL(i, memory)
+            GreedFactor[t].append(Next)
+        
+        Z = TotalC(C)
+    
+    return C, GreedFactor, Z, Strategy
+
+"""
+Exhausive search the best sequence functions.
+Greed Factor is an 1D list of size 16.
+"""
+
+def Exhausive(T, Porfoliolist, Stock, StockL, allPossibleCombination):
+    allPossibleResult = []
+    for seq in allPossibleCombination:
+        GreedFactor = seq
+        capitalSeries = playerSimulation(T, Stock, StockL, Porfoliolist, GreedFactor)
+        allPossibleResult.append(capitalSeries[-1])
+    L = list(zip(allPossibleResult, allPossibleCombination))
+    return max(L)
+
+def playerSimulation(T, Stock, StockL, Porfoliolist, GreedFactor):
+    C = [100.0]
+    
+    for t in T[1:]:
+        if GreedFactor[t-1] == '0':
+            Portfolio = Porfoliolist[0]
+        if GreedFactor[t-1] == '1':
+            Portfolio = Porfoliolist[1]
+        NumberofStockH = C[t-1]*Portfolio[0]/Stock[t-1]
+        NumberofStockL = C[t-1]*Portfolio[1]/StockL[t-1]
+    
+        CH = Stock[t] * NumberofStockH
+        CL = StockL[t] * NumberofStockL
+        C.append(CH + CL)
+    
+    return C
+
+"""
+crossover: uniform crossover
+"""
+def crossover(list1, list2):
+    for i in range(0, 50):
+        for j in range(0, 16):
+            a = random.randint(0, 11)
+            if a < 5.5:
+                list1[j][i] = list2[j][i]
+    return list1
+
+#"""
+#100 random places (x, y). x, y >= 0 and <= 49.
+#"""
+#def mutation(list1):
+#    n = 0
+#    while n > 100:
+#        x = random.randint(0, 49)
+#        y = random.randint(0, 15)
+#        if list1[y][x] == 'FW':
+#            list1[y][x] = 'AL'
+#        if list1[y][x] == 'AL':
+#            list1[y][x] = 'FW'
+#        n += 1
+#    return list1
+
+"""
+Randomly generated a FW/AL list. 16row*50col composed by FW/AL.
+"""
+def randomFWALlist(T, allPossibleCombination):
+    t = 0
+    Strategy = []
+    for t in T:
+        
+        StrategyAtT = []
+        index = random.randint(0, 65535)
+        for i in allPossibleCombination[index]:
+            if i == '0':
+                StrategyAtT.append('AL')
+            if i == '1':
+                StrategyAtT.append('FW')
+        index = random.randint(0, 65535)
+        for i in allPossibleCombination[index]:
+            if i == '0':
+                StrategyAtT.append('AL')
+            if i == '1':
+                StrategyAtT.append('FW')
+        index = random.randint(0, 65535)
+        for i in allPossibleCombination[index]:
+            if i == '0':
+                StrategyAtT.append('AL')
+            if i == '1':
+                StrategyAtT.append('FW')
+        A = [seq for seq in itertools.product("01", repeat=2)]
+        index = random.randint(0, 3)
+        for i in A[index]:
+            if i == '0':
+                StrategyAtT.append('AL')
+            if i == '1':
+                StrategyAtT.append('FW')
+        
+        Strategy.append(StrategyAtT)
+        t +=1
+    
+    return Strategy
+    
+
+"""
+GA functions. Total list is 3D, 20*(FW/AL list). Which means there are 20 chromosomes
+each is 16row*50col 2D list, where t = 16 and 50 players.
+
+FW/AL list will become a 16row*50col 2D list, which will be modify using GA.
+
+Uniform crossover will be used. If repeated chromosome is found, delete the repeated chromosome.
+Parents are kept unless childrens are better than them.
+"""
+def eachGeneration(previousList, T, Stock, StockL, Porfoliolist, Connect, allPossibleCombination):    
+    
+    "Crossover*10"
+    Children = []
+    PreviousList = tuple(previousList)
+    Parents = previousList
+#    print(len(previousList))
+    
+    index = 1
+    while index + 1 <= 20:
+        indexA = random.randint(0, 20-index)
+        ParentsA = Parents.pop(indexA)
+        indexB = random.randint(0, 20-(index+1))
+        ParentsB = Parents.pop(indexB)
+        "If the two parents the same, mutate"
+        if ParentsA == ParentsB:
+            ParentsB = crossover(ParentsB ,randomFWALlist(T, allPossibleCombination))
+        Children.append(crossover(ParentsA, ParentsB))
+        index += 2
+     
+    """
+    The following is a failed attempt to remove duplicate of chromosomes.
+    """
+    NewSeq = list(PreviousList) + Children
+#    new_array = np.asarray([tuple(row) for row in NewSeq.reshape(30, 800)])
+##    print(new_array)
+#    uniques = np.unique(new_array, axis=0)
+#    Get = uniques.reshape(len(uniques), 16, 50)
+#    NewSeq = np.ndarray.tolist(Get)
+    
+    while len(NewSeq) < 20:
+        NewSeq.append(randomFWALlist(T, allPossibleCombination))
+         
+    Result = []
+    for i in NewSeq:
+        simulationResult = groupSimulation(T, Stock, StockL, i, Porfoliolist, Connect)[2][-1]
+        Result.append(simulationResult)
+#    print(Result)
+    
+    Sorted = sorted(zip(Result, NewSeq), reverse=True)[:20]
+#    print(Sorted)
+    SortedNewR, SortedNewSeq = zip(*Sorted)
+    SortedNewSeq = list(SortedNewSeq)
+#    print(SortedNewSeq)
+    
+    return SortedNewSeq
+
+"""
+If the poplulation unchanged for 3 Generations, reinitialize the population by mutating sequence except best 3.
+"""
+def reInitialize(newList):
+    RestOfList = []
+    for i in newList[3:]:
+        RestOfList.append(crossover(i ,randomFWALlist(T, allPossibleCombination)))
+    List = newList[:3] + RestOfList
+    return List
+    
+"""
+Initial setting
+"""
+Connect = 1
+T =[int(t) for t in np.linspace(0, 15, 16)]
+Stock = StockH(T)
+StockL = [1]*16
+Porfoliolist = [(0.1, 0.9), (0.9, 0.1)]
+allPossibleCombination = [seq for seq in itertools.product("01", repeat=16)]
+
+"""
+Exhausive search the best sequence
+"""
+Best = Exhausive(T, Porfoliolist, Stock, StockL, allPossibleCombination)
+BestSequence = Best[1]
+BestResult = Best[0]
+BestPath = playerSimulation(T, Stock, StockL, Porfoliolist, BestSequence)
+
+"""
+Best possible performance by a ring structure.
+"""
+Generation = 0
+initialList = []
+ListRecord = []
+for i in range(0, 20):
+    initialList.append(randomFWALlist(T, allPossibleCombination))
+previousList = initialList
+while Generation < 100:
+    ListRecord.append(previousList)
+#    print(previousList)
+    print("The gen:")
+    print(Generation)
+    newList = eachGeneration(previousList, T, Stock, StockL, Porfoliolist, Connect, allPossibleCombination)
+#    print(newList)
+    previousList = newList
+#    print(newList)   
+    
+    """
+    Try to reinitialise if the population is unchanged for a few generations.
+    """
+#    if Generation > 10:
+#        if newListRecord[-1] == newListRecord[-2] and newListRecord[-2] == newListRecord[-3]:
+#            previousList = reInitialize(newList)    
+    Generation += 1
+
+Result = []
+for i in newList:
+    simulationResult = groupSimulation(T, Stock, StockL, i, Porfoliolist, Connect)[2][-1]
+    Result.append(simulationResult)
+BestGroupStrategy = sorted(zip(Result, newList), reverse=True)[:5]
+BestgroupGreed = groupSimulation(T, Stock, StockL, newList[0], Porfoliolist, Connect)[1]
+
+import matplotlib
+print(BestgroupGreed)
+fig = matplotlib.pyplot.figure()
+ax = fig.add_subplot(111)
+xlabel("Players")
+ylabel("Portfolio")
+img = ax.imshow(BestgroupGreed, aspect='auto', cmap=matplotlib.pyplot.cm.gray, interpolation='nearest')
+img
+
+"""
+Repeat for sin fuction input, from low to high frequency.
+"""
