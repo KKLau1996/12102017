@@ -91,16 +91,22 @@ def get_capital(t, cap, portfolio_list, stock_h, stock_l, greed_fac, NUM_OF_PLAY
        
     return cap_at_time_t
     
-def Memory(t, i, GreedFactor, Winhowmuch, Connect):
-    
-    L = list(zip(Winhowmuch[t], GreedFactor[t-1]))
-#    print(L)
-#    print(len(L))
-#    print(Winhowmuch[t])
-#    print(GreedFactor[t-1])
-    MemoryList = [L[x % len(L)] for x in range(i-Connect, i+Connect+1)]
-#    print(MemoryList)
-    return MemoryList
+def memory_of_prevoius_round(t, numero_of_agent, greed_fac, amount_win, connectivity):
+    """
+    Args:
+        t (int): time step
+        numero_of_agent (int): the numero of agent using this function. From 0 to 49.
+        greed_fac (list): greedy_factor[time][agent]
+        amount_win (list): amount_of_the_agent_wins[time][agent]
+        connectivity (int): amount of agents connected to the agent on each (left or right) side
+        
+    Returns:
+        information_the_player_is_accessed(list)
+    """
+    L = list(zip(amount_win[t], greed_fac[t-1]))
+    information_the_player_is_accessed = [L[x % len(L)] for x in range(i-connectivity, i+connectivity+1)]
+
+    return information_the_player_is_accessed
     
 def FW(i, memory):
     Winner = max(memory)
