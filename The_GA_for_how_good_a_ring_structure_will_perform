@@ -35,29 +35,61 @@ import itertools
 from pylab import imshow, plot,show, ylim, xlabel, ylabel, subplots, legend
 import random
 
-def NumberofStock(T, C, Porfoliolist, StockH, StockL, GreedFactor):
-    NumberofStockH = []
-    NumberofStockL = []
-    for i in range(0,50):
-        if GreedFactor[T][i] == 0:
-            Portfolio = Porfoliolist[0]
+TOTAL_TIME = 16
+NUM_OF_PLAYER = 50
+
+def number_of_stock(t, caps, portfolio_list, stock_h, stock_l, greed_fac, NUM_OF_PLAYER):
+     """
+     Calculate the number of stocks (H and L) at time t for each agents
+     Args:
+         t (int): time step
+         caps (list): capitals[time][agent]
+         portfolio_list (list)
+         stock_h (list): stock price (H)
+         stock_l (list): stock price (L)
+         greed_fac (list): greedy_factor[time][agent]
+ 
+     Returns:
+         number_of_stocks (tuple)
+ 
+     """
+    number_of_stock_h = []
+    number_of_stock_l = []
+  
+    # iterate for each agent
+    for i in range(0, NUM_OF_PLAYER):
+       # if the greedy factor at time t is 0, choose a low risk strategy,
+       # otherwise choose a high risk strategy
+        if GreedFactor[t][i] == 0:
+            portfolio = portfolio_list[0]
         else: 
-            Portfolio = Porfoliolist[1]
-        NumberofStockH.append(C[T][i]*Portfolio[0]/StockH[T])
-        NumberofStockL.append(C[T][i]*Portfolio[1]/StockL[T])
-    return NumberofStockH, NumberofStockL
+            portfolio = portfolio_list[1]
+        number_of_stock_h.append(caps[t][i] * portfolio[0] / stock_h[T])
+        number_of_stock_l.append(caps[t][i] * portfolio[1] / stock_h[T])
+    return number_of_stock_h, number_of_stock_l
     
-def getCapital(t, C, Porfoliolist, StockH, StockL, GreedFactor):
-    Captialatt = []
-#    print(GreedFactor)
-#    print(C[t-1])
-#    print(StockH[t])
-    for i in range(0,50):
-        CH = StockH[t] * NumberofStock(t-1, C, Porfoliolist, StockH, StockL, GreedFactor)[0][i]
-        CL = StockL[t] * NumberofStock(t-1, C, Porfoliolist, StockH, StockL, GreedFactor)[1][i]
-        Captialatt.append(CH + CL)
-#    print(CH)
-    return Captialatt
+def get_capital(t, cap, portfolio_list, stock_h, stock_l, greed_fac, NUM_OF_PLAYER):
+ """
+ Calculate the capital at time t for each agent
+     Args:
+         t (int): time step
+         cap (list): capitals[time][agent]
+         portfolio_list (list)
+         stock_h (list): stock price (H)
+         stock_l (list): stock price (L)
+         greed_fac (list): greedy_factor[time][agent]
+ 
+     Returns:
+         cap_at_time_t (list)
+  """
+    cap_at_time_t = []
+
+    for i in range(0, NUM_OF_PLAYER):
+        cap_from_h = stock_h[t] * number_of_stock(t - 1, cap, portfolio_list, stock_h, stock_l, greed_fac, NUM_OF_PLAYER)[0][i]
+        cap_from_l = stock_l[t] * number_of_stock(t - 1, cap, portfolio_list, stock_h, stock_l, greed_fac, NUM_OF_PLAYER)[1][i]
+        cap_at_time_t.append(cap_from_h + cap_from_l)
+       
+    return cap_at_time_t
     
 def Memory(t, i, GreedFactor, Winhowmuch, Connect):
     
