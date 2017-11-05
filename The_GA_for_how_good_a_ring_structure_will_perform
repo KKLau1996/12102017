@@ -69,8 +69,7 @@ def number_of_stock(t, caps, portfolio_list, stock_h, stock_l, greed_fac, NUM_OF
     return number_of_stock_h, number_of_stock_l
     
 def get_capital(t, cap, portfolio_list, stock_h, stock_l, greed_fac, NUM_OF_PLAYER):
- """
- Calculate the capital at time t for each agent
+  """
      Args:
          t (int): time step
          cap (list): capitals[time][agent]
@@ -165,10 +164,22 @@ def total_capital_of_all_players(caps_at_time_t):
 
 """
 The simulation of a group of payer play by FW/AL.
-Strategy size: [[Size of 50]*(number of index of T)]
 """
-def groupSimulation(T, Stock, StockL, Strategy, Porfoliolist, Connect):
-    C = [[100.0]*50]
+def groupSimulation(t, stock_h, stock_l, Strategy, Porfoliolist, connectivity):
+     """
+     Args:
+         t (int): time step
+         stock_h (list): stock price (H)
+         stock_l (list): stock price (L)
+         strategy[[agent]*(time step)]: strategy of "FW" or "AL"
+         portfolio_list (list)
+         connectivity (int): amount of agents connected to the agent on each (left or right) side
+ 
+     Returns:
+         number_of_stocks (tuple)
+     """
+ 
+    caps = [[100.0]*50]
     GreedFactor = [[0, 1]*25]
     Winhowmuch = []
     Winhowmuch.append([0]*50)
