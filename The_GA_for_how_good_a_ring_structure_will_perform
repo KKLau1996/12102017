@@ -108,21 +108,28 @@ def memory_of_prevoius_round(t, numero_of_agent, greed_fac, amount_win, connecti
 
     return information_the_player_is_accessed
     
-def FW(i, memory):
-    Winner = max(memory)
-    Next = Winner[1]
-    return Next
+def FW(information_the_player_is_accessed, connectivity):
+     """
+    Args:
+        information_the_player_is_accessed(list)
+        
+    Returns:
+        portfolio_next_round(tuple): (amount_win of winner, greed_fac of winner)
+    """
+    winner = max(information_the_player_is_accessed)
+    portfolio_next_round = winner[connectivity]
+    return portfolio_next_round
 
-def AL(i, memory):
-    Loser = min(memory)
-    if memory[1] == Loser:
-        if memory[1][1] == 0:
-            Next = 1
-        if memory[1][1] == 1:
-            Next = 0
+def AL(information_the_player_is_accessed, connectivity):
+    loser = min(information_the_player_is_accessed)
+    if information_the_player_is_accessed[connectivity] == loser:
+        if information_the_player_is_accessed[connectivity][1] == 0:
+            portfolio_next_round = 1
+        if information_the_player_is_accessed[connectivity][1] == 1:
+            portfolio_next_round = 0
     else:
-        Next = memory[1][1]
-    return Next
+        portfolio_next_round = information_the_player_is_accessed[connectivity][1]
+    return portfolio_next_round
 
 def StockH(T):
 #    C1 = np.random.random()
