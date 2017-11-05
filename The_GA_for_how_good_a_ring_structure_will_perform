@@ -112,6 +112,7 @@ def FW(information_the_player_is_accessed, connectivity):
      """
     Args:
         information_the_player_is_accessed(list)
+        connectivity (int): amount of agents connected to the agent on each (left or right) side
         
     Returns:
         portfolio_next_round(tuple): (amount_win of winner, greed_fac of winner)
@@ -121,6 +122,14 @@ def FW(information_the_player_is_accessed, connectivity):
     return portfolio_next_round
 
 def AL(information_the_player_is_accessed, connectivity):
+    """
+    Args:
+        information_the_player_is_accessed(list)
+        connectivity (int): amount of agents connected to the agent on each (left or right) side
+        
+    Returns:
+        portfolio_next_round(tuple): (amount_win of loser, greed_fac of loser)
+    """
     loser = min(information_the_player_is_accessed)
     if information_the_player_is_accessed[connectivity] == loser:
         if information_the_player_is_accessed[connectivity][1] == 0:
@@ -131,30 +140,28 @@ def AL(information_the_player_is_accessed, connectivity):
         portfolio_next_round = information_the_player_is_accessed[connectivity][1]
     return portfolio_next_round
 
-def StockH(T):
-#    C1 = np.random.random()
-    C1 = 0.6713081033987339
-    print("C1 is:")
-    print(C1)
-#    C2 = np.random.random()
-    C2 = 0.3863530740707609
-    print("C2 is:")
-    print(C2)
-#    wlist = linspace(5, 10, 100)
-#    w = np.random.choice(wlist)
-    w = 6.81818181818
-    print("w is:")
-    print(w)
-    StockH = [2 + C1*np.sin(w*t/15) + C2*np.cos(w*t/15) for t in T]
-#    StockH = [1 + t for t in T]
-    return StockH
+def stock_h():
+    """  
+    Get data from file
+    Returns:
+        stock_h(list)
+    """
+    stock_h = np.loadtxt("")
+    return stock_h
 
-def TotalC(Clist):
-    TotalC = []
-    for x in Clist:
-        Total = sum(x)
-        TotalC.append(Total)
-    return TotalC
+def total_capital_of_all_players(caps_at_time_t):
+    """
+    Args:
+        caps_at_time_t(list): capital[agents]
+        
+    Returns:
+        total_capital_of_all_players (int)
+    """
+    total_capital_of_all_players = []
+    for x in caps_at_time_t:
+        total_c = sum(x)
+        total_capital_of_all_players.append(total_c)
+    return total_capital_of_all_players
 
 """
 The simulation of a group of payer play by FW/AL.
